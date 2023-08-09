@@ -81,7 +81,7 @@ func main() {
 		case "ЛС", "/ls":
 			msg.Text = templates.LS
 			utils.SetUserStatus(update.Message.From.ID, "waiting_for_ls_message")
-		case "Предложить пост", "/SuggestPost":
+		case "Предложить пост", "/suggestpost":
 			utils.SetUserStatus(update.Message.From.ID, "waiting_for_post_title")
 			msg.Text = "Введите заголовок поста:"
 		case "Контакты", "/contacts":
