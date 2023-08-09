@@ -25,15 +25,11 @@ func CreateBot(token string) (*tgbotapi.BotAPI, error) {
 
 // SetUserStatus устанавливает статус пользователя
 func SetUserStatus(userID int, status string) {
-	// Здесь вы можете сохранить статус пользователя в базе данных или каким-либо другим способом
-	// В данном примере мы будем сохранять статус в переменной
 	userStatuses[userID] = status
 }
 
 // GetUserStatus получает статус пользователя
 func GetUserStatus(userID int) string {
-	// Здесь вы можете получить статус пользователя из базы данных или другого источника
-	// В данном примере мы будем получать статус из переменной
 	status, exists := userStatuses[userID]
 	if !exists {
 		return ""
@@ -49,4 +45,14 @@ func SendToGroup(bot *tgbotapi.BotAPI, groupChatID int64, message string) {
 
 func GetUserLink(user *tgbotapi.User) string {
 	return fmt.Sprintf("@%s", user.UserName)
+}
+
+func GetSocialMedia(data map[string]string) string {
+	var output string
+
+	for key, value := range data {
+		output += fmt.Sprintf("[%s](%s) | ", key, value)
+	}
+
+	return "| " + output
 }

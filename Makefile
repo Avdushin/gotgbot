@@ -1,7 +1,11 @@
 appname="tgbot"
 
 Default:
-	go run ./cmd/app/main.go
+	go build -o build/tgbot ./cmd/app/main.go
+	./build/tgbot
 
-Build:
-	go build -o tgbot ./cmd/app/main.go
+build:
+	go build -o build/tgbot ./cmd/app/main.go
+
+run:
+	go run ./cmd/app/main.go

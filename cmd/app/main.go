@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"itdobro/config"
 	"itdobro/pkg/logger"
+	"itdobro/pkg/templates"
 	"itdobro/pkg/utils"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -20,18 +22,30 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	// Set bot token
-	botToken := utils.GetBotToken()
-	bot, err := utils.CreateBot(botToken)
+	bot, err := utils.CreateBot(utils.GetBotToken())
 	if err != nil {
 		log.Panic(err)
 	}
 
-	bot.Debug = true
+	// @ Set false to the Production
+	dbug := os.Getenv("DEBUG")
+	// ? Get Debug mode from .env file
+	switch dbug {
+	case "true", "TRUE":
+		bot.Debug = true
+	default:
+		bot.Debug = false
+	}
 
-	log.Info(fmt.Sprintf("Бот %s запущен!", bot.Self.UserName))
+	log.Printf("Бот %s запущен!", bot.Self.UserName)
 
+	fmt.Printf("\nDEBUG=%s\n\n", dbug)
+
+	// @ Getting updates
 	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	u.Timeout = 60 // set update's Timeout...
+
+	// TODO: Make refatoring!
 
 	updates, err := bot.GetUpdatesChan(u)
 
@@ -39,35 +53,59 @@ func main() {
 		if update.Message == nil {
 			continue
 		}
-
+		// get messages
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+		// Set parse mode to Markdown
+		msg.ParseMode = "markdown"
 
 		switch update.Message.Text {
 		case "/start":
-			msg.Text = "Привет! Я бот с кнопками. Выберите действие:"
+			msg.Text = templates.Welcome
 			msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
-		case "Обратиться":
-			msg.Text = "Выберите действие:"
+		case "Помощь", "/help":
+			msg.Text = templates.Welcome
+			msg.ReplyMarkup = utils.CreateHelpMenuKeyboard()
+		case "Команды", "команды", "/commands":
+			msg.Text = templates.Commands
+			msg.ReplyMarkup = utils.CreateHelpMenuKeyboard()
+		case "Обратиться", "/treatment":
+			msg.Text = fmt.Sprintf(`Вы можете обратиться к %s со своим вопросом/предложением`, config.TgUserName)
 			msg.ReplyMarkup = utils.CreateSupportMenuKeyboard()
-		case "Реклама":
-			msg.Text = "Введите текст рекламного сообщения:"
+			if msg.Text == "Назад" {
+				// msg.Text = "Вы вернулись назад"
+				msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
+			}
+		case "Реклама", "/ads":
+			msg.Text = templates.ADS
 			utils.SetUserStatus(update.Message.From.ID, "waiting_for_ad_message")
-		case "Предложить пост":
+		case "ЛС", "/ls":
+			msg.Text = templates.LS
+			utils.SetUserStatus(update.Message.From.ID, "waiting_for_ls_message")
+		case "Предложить пост", "/SuggestPost":
 			utils.SetUserStatus(update.Message.From.ID, "waiting_for_post_title")
 			msg.Text = "Введите заголовок поста:"
+		case "Контакты", "/contacts":
+			utils.SetUserStatus(update.Message.From.ID, "")
+			msg.Text = templates.Contacts
+			if msg.Text == "Назад" {
+				msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
+			}
+		case "Назад":
+			utils.SetUserStatus(update.Message.From.ID, "")
+			msg.Text = "Выберете действие..."
+			msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
 		default:
 			status := utils.GetUserStatus(update.Message.From.ID)
 			if status == "waiting_for_ad_message" {
 				// Обработка рекламного сообщения
 				user := update.Message.From
 				username := "@" + user.UserName
-				userLink := fmt.Sprintf("Пользователь %s", username)
 
-				adMessage := fmt.Sprintf("📢 Реклама от %s:\n%s", userLink, update.Message.Text)
+				adMessage := fmt.Sprintf("📢 Рекламное предложение от %s:\n%s\n\n@%s", username, update.Message.Text, config.TgUserName)
 
 				utils.SendToGroup(bot, config.GetGroupID(), adMessage)
 
-				msg.Text = "Рекламное сообщение отправлено в группу!"
+				msg.Text = "Предложение отправлено!"
 				utils.SetUserStatus(update.Message.From.ID, "")
 				msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
 			} else if status == "waiting_for_post_title" {
@@ -125,8 +163,21 @@ func main() {
 				msg.Text = "Пост отправлен в предложку!"
 				utils.SetUserStatus(update.Message.From.ID, "")
 				msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
+			} else if status == "waiting_for_ls_message" {
+				// Обработка личного сообщения
+				user := update.Message.From
+				username := "@" + user.UserName
+
+				adMessage := fmt.Sprintf("Новое обращение от %s:\n%s", username, update.Message.Text)
+
+				utils.SendToGroup(bot, config.GetGroupID(), adMessage)
+
+				msg.Text = "Обращение отправлено!"
+				utils.SetUserStatus(update.Message.From.ID, "")
+				msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
 			} else {
-				msg.Text = "Выберите действие:"
+				utils.SetUserStatus(update.Message.From.ID, "")
+				msg.Text = "Выберете действие..."
 				msg.ReplyMarkup = utils.CreateMainMenuKeyboard()
 			}
 		}

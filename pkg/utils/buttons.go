@@ -6,22 +6,36 @@ import (
 
 func CreateMainMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	keys := []tgbotapi.KeyboardButton{
-		tgbotapi.NewKeyboardButton("Написать"),
-		tgbotapi.NewKeyboardButton("Информация"),
-		tgbotapi.NewKeyboardButton("Предложить пост"),
+		tgbotapi.NewKeyboardButton("Обратиться"),
+		tgbotapi.NewKeyboardButton("Помощь"),
 	}
 	return tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(keys...),
 	)
 }
 
-// CreateSupportMenuKeyboard создает клавиатуру для меню обращения
 func CreateSupportMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
-	// Создайте и верните клавиатуру для меню обращения
 	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Реклама"),
 			tgbotapi.NewKeyboardButton("Предложить пост"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("ЛС"),
+			tgbotapi.NewKeyboardButton("Назад"),
+		),
+	)
+	return keyboard
+}
+
+func CreateHelpMenuKeyboard() tgbotapi.ReplyKeyboardMarkup {
+	keyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Команды"),
+			tgbotapi.NewKeyboardButton("Контакты"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Назад"),
 		),
 	)
 	return keyboard
