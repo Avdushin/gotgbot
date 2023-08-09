@@ -19,7 +19,7 @@ func main() {
 	log := logger.GetLogger()
 	// Load dotenv variables
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Error("Error loading .env file")
 	}
 	// Set bot token
 	bot, err := utils.CreateBot(utils.GetBotToken())
